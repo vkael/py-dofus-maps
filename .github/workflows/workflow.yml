@@ -1,0 +1,44 @@
+name: workflow
+
+on:
+  schedule:
+    - cron: '0 11 * * TUE'
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Checkout MapPositions
+        uses: actions/checkout@v3
+        with:
+          repository: bot4dofus/Datafus
+          path: datafus
+          sparse-checkout: |
+            data/B/entities_json/MapPositions.json
+
+      - uses: oprypin/find-latest-tag@v1
+        with:
+          repository: bot4dofus/Datafus
+          releases-only: true
+        id: datafus
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Process .d2p
+        run: |
+          mv datafus/data/B/entities_json/MapPositions.json input/
+          python __main__.py
+
+      - name: Push to repository
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: '["output/maps.pkl"]'
+          message: 'Update dictionary for version ${{ steps.datafus.outputs.tag }}'
+          push: true

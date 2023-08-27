@@ -1,0 +1,1 @@
+# py-dofus-maps
